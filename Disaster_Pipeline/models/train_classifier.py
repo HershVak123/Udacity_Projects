@@ -21,6 +21,11 @@ PUNCTUATION_TABLE = str.maketrans('', '', string.punctuation)
 
 
 def load_data(database_filepath):
+    """
+    Loads cleaned data from a sqlite database and splits it into X, y values
+    :param database_filepath: File path for the sqlite database
+    :return: Returns our data split into X, y values and a list of column names
+    """
     engine = create_engine('sqlite:///' + database_filepath)
     df = pd.read_sql_table('clean_msg', engine)
     engine.dispose()
@@ -33,6 +38,13 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
+    """
+    Takes text and transforms the words into their lemmatized version.
+
+    :param text: Text to be transformed
+    :return: Returns a list of lemmatized words with stop words removed
+    """
+
     text = text.translate(PUNCTUATION_TABLE).lower()
 
     tokens = nltk.word_tokenize(text)
@@ -43,6 +55,11 @@ def tokenize(text):
 
 
 def build_model():
+    """
+    Builds our model pipeline and trains it.
+    The model pipeline utilizes GridSearch to find a set of hyperparameters that maximize the model's performance
+    :return: A trained model object
+    """
     clf = RandomForestClassifier(n_estimators=100)
 
     pipeline = Pipeline([
@@ -65,16 +82,38 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    """
+    Evaluates our model on metrics such as accuracy, precision, recall, and F1 score
+
+    :param model: trained model object
+    :param X_test: X-values from our test set to assess the model on
+    :param Y_test: y-values from our test set to evaluate the model on
+    :param category_names: List of column names for our "category" columns that will display with each set of metrics
+    :return: Prints the metrics of our model
+    """
     Y_pred = model.predict(X_test)
 
     print(classification_report(Y_test, Y_pred, target_names=category_names))
 
 
 def save_model(model, model_filepath):
+    """
+    Saves our model as a pickle file to be used by the web app.
+
+    :param model: model object that will be saved
+    :param model_filepath: File path to save our model's pickle file
+    :return: Saves the model at the specified file path
+    """
     joblib.dump(model, model_filepath)
 
 
 def main():
+    """
+    Executes our model pipeline
+
+    :return: prints success message if the model is successfully saved, otherwise will print
+    an alternate message if not enough args are specified from the command line
+    """
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
